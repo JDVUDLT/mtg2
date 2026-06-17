@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гримуар — учёт коллекции Magic: The Gathering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Cormorant+SC:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #181210;
+    --bg-soft: #221b17;
+    --panel: #2a2119;
+    --panel-border: #3d2f24;
+    --parchment: #e8dcc4;
+    --parchment-dim: #c4b69a;
+    --gold: #c9a24a;
+    --gold-bright: #e0c068;
+    --ink: #14100d;
+
+    --mana-w: #f0e2b6;
+    --mana-u: #4a8fc2;
+    --mana-b: #6a5a78;
+    --mana-r: #d3603f;
+    --mana-g: #5a8a5e;
+
+    --radius: 6px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(201,162,74,0.06), transparent 45%),
+      radial-gradient(circle at 80% 100%, rgba(74,143,194,0.05), transparent 45%);
+    color: var(--parchment);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, .display {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--gold-bright);
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-family: 'Cormorant SC', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.85;
+  }
+
+  header.top {
+    padding: 2rem 2rem 1.4rem;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  header.top h1 { font-size: 2.1rem; }
+
+  .tabs {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--parchment-dim);
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius);
+    font-family: 'Cormorant SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tab-btn:hover { border-color: var(--gold); color: var(--parchment); }
+  .tab-btn.active {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+  }
+
+  main { padding: 1.6rem 2rem 4rem; max-width: 1280px; margin: 0 auto; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .toolbar {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+  }
+
+  input[type="text"], select, input[type="number"], input[type="date"] {
+    background: var(--bg-soft);
+    border: 1px solid var(--panel-border);
+    color: var(--parchment);
+    padding: 0.55rem 0.8rem;
+    border-radius: var(--radius);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  input[type="text"]:focus, select:focus, input[type="number"]:focus, input[type="date"]:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+
+  .search-input { flex: 1; min-width: 200px; }
+
+  .mana-filters { display: flex; gap: 0.4rem; }
+  .mana-dot {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--panel-border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant SC', serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ink);
+    opacity: 0.45;
+    transition: all 0.15s ease;
+  }
+  .mana-dot.active { opacity: 1; transform: scale(1.08); border-color: var(--gold-bright); }
+  .mana-dot.w { background: var(--mana-w); }
+  .mana-dot.u { background: var(--mana-u); color: var(--parchment); }
+  .mana-dot.b { background: var(--mana-b); color: var(--parchment); }
+  .mana-dot.r { background: var(--mana-r); color: var(--parchment); }
+  .mana-dot.g { background: var(--mana-g); color: var(--parchment); }
+
+  .btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s ease;
+  }
+  .btn:hover { background: var(--gold-bright); }
+  .btn.secondary {
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--parchment-dim);
+  }
+  .btn.secondary:hover { border-color: var(--gold); color: var(--parchment); }
+  .btn.danger { background: var(--mana-r); color: #fff; }
+  .btn.small { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+
+  .status-line {
+    font-size: 0.85rem;
+    color: var(--parchment-dim);
+    margin-bottom: 1rem;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1.1rem;
+  }
+
+  .card-tile {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-tile:hover {
+    transform: translateY(-4px) rotate(-0.6deg);
+    box-shadow: 0 14px 26px rgba(0,0,0,0.45);
+    border-color: var(--gold);
+  }
+
+  .card-tile img {
+    width: 100%;
+    aspect-ratio: 5/7;
+    object-fit: cover;
+    background: var(--bg-soft);
+    display: block;
+  }
+  .card-tile .no-image {
+    width: 100%;
+    aspect-ratio: 5/7;
+    background: var(--bg-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--parchment-dim);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 0.6rem;
+  }
+
+  .card-tile-body {
+    padding: 0.7rem 0.75rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+  }
+  .card-tile-name { font-size: 1rem; line-height: 1.15; }
+  .card-tile-meta {
+    font-size: 0.74rem;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .card-tile-actions { margin-top: auto; padding-top: 0.5rem; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  th, td {
+    padding: 0.65rem 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid var(--panel-border);
+    font-size: 0.88rem;
+  }
+  th {
+    font-family: 'Cormorant SC', serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.76rem;
+    color: var(--gold);
+    background: var(--bg-soft);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(201,162,74,0.05); }
+
+  .qty-input { width: 60px; text-align: center; }
+
+  .pill {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--panel-border);
+    color: var(--parchment-dim);
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.6rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--parchment-dim);
+  }
+  .empty-state .display { font-size: 1.4rem; display: block; margin-bottom: 0.4rem; }
+
+  .summary-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .summary-stat {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 0.8rem 1.2rem;
+    min-width: 140px;
+  }
+  .summary-stat .num { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; color: var(--gold-bright); display: block; }
+  .summary-stat .label { font-size: 0.74rem; color: var(--parchment-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,8,6,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 1.6rem;
+    max-width: 420px;
+    width: 100%;
+  }
+  .modal h3 { margin-bottom: 1rem; }
+  .modal label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--parchment-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+    margin-top: 0.8rem;
+  }
+  .modal input, .modal select { width: 100%; }
+  .modal-actions { display: flex; gap: 0.6rem; margin-top: 1.4rem; }
+
+  .toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    color: var(--parchment);
+    padding: 0.8rem 1.2rem;
+    border-radius: var(--radius);
+    font-size: 0.88rem;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .config-warning {
+    margin: 2rem;
+    padding: 1.2rem 1.4rem;
+    background: var(--panel);
+    border: 1px solid var(--mana-r);
+    border-radius: var(--radius);
+    max-width: 600px;
+  }
+  .config-warning code {
+    background: var(--bg-soft);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    color: var(--gold-bright);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-tile { transition: none; }
+    .card-tile:hover { transform: none; }
+  }
+
+  @media (max-width: 640px) {
+    header.top { padding: 1.4rem 1.2rem; }
+    main { padding: 1.2rem; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="eyebrow">Личный реестр карт</div>
+    <h1>Гримуар</h1>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="catalog">Каталог</button>
+    <button class="tab-btn" data-view="collection">Моя коллекция</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= ВКЛАДКА: КАТАЛОГ ================= -->
+  <section class="view active" id="view-catalog">
+    <div class="toolbar">
+      <input type="text" id="catalog-search" class="search-input" placeholder="Имя карты… (например, Lightning Bolt)">
+      <select id="catalog-rarity">
+        <option value="">Любая редкость</option>
+        <option value="common">Common</option>
+        <option value="uncommon">Uncommon</option>
+        <option value="rare">Rare</option>
+        <option value="mythic">Mythic</option>
+      </select>
+      <div class="mana-filters" id="mana-filters">
+        <div class="mana-dot w" data-color="W" title="Белый">W</div>
+        <div class="mana-dot u" data-color="U" title="Синий">U</div>
+        <div class="mana-dot b" data-color="B" title="Чёрный">B</div>
+        <div class="mana-dot r" data-color="R" title="Красный">R</div>
+        <div class="mana-dot g" data-color="G" title="Зелёный">G</div>
+      </div>
+      <button class="btn secondary small" id="catalog-reset">Сбросить</button>
+    </div>
+
+    <div class="status-line" id="catalog-status">Введите название карты, чтобы начать поиск.</div>
+
+    <div class="card-grid" id="catalog-grid"></div>
+
+    <div class="pagination" id="catalog-pagination" style="display:none;">
+      <button class="btn secondary small" id="catalog-prev">← Раньше</button>
+      <button class="btn secondary small" id="catalog-next">Позже →</button>
+    </div>
+  </section>
+
+  <!-- ================= ВКЛАДКА: МОЯ КОЛЛЕКЦИЯ ================= -->
+  <section class="view" id="view-collection">
+
+    <div class="summary-bar" id="collection-summary"></div>
+
+    <div class="toolbar">
+      <input type="text" id="collection-search" class="search-input" placeholder="Поиск в моей коллекции…">
+      <button class="btn secondary small" id="collection-refresh">Обновить</button>
+    </div>
+
+    <div id="collection-table-wrap"></div>
+  </section>
+
+</main>
+
+<!-- ============ Модалка добавления карты в коллекцию ============ -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3 id="add-modal-title">Добавить карту</h3>
+    <label for="add-quantity">Количество</label>
+    <input type="number" id="add-quantity" value="1" min="1">
+
+    <label for="add-finish">Исполнение</label>
+    <select id="add-finish">
+      <option value="nonfoil">Обычная</option>
+      <option value="foil">Фойл</option>
+      <option value="etched">Etched-фойл</option>
+    </select>
+
+    <label for="add-condition">Состояние</label>
+    <select id="add-condition">
+      <option value="NM">NM — как новая</option>
+      <option value="LP">LP — лёгкий износ</option>
+      <option value="MP">MP — заметный износ</option>
+      <option value="HP">HP — сильный износ</option>
+      <option value="DMG">DMG — повреждена</option>
+    </select>
+
+    <label for="add-price">Цена покупки (необязательно)</label>
+    <input type="number" id="add-price" step="0.01" placeholder="0.00">
+
+    <label for="add-notes">Заметки</label>
+    <input type="text" id="add-notes" placeholder="Например: с турнира, подпись и т.п.">
+
+    <div class="modal-actions">
+      <button class="btn" id="add-confirm">Добавить в коллекцию</button>
+      <button class="btn secondary" id="add-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
