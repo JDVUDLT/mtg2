@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "import": "node scripts/import-cards.js",
-    "start": "node ваш-главный-файл.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
