@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "import": "node scripts/import-cards.js",
-    "start": "node server.js"
+    "start": "serve -s . -l $PORT"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -14,6 +14,7 @@
     "node-fetch": "^3.3.2",
     "npm": "^11.17.0",
     "run": "^1.5.0",
+    "serve": "^14.2.6",
     "stream-json": "^1.8.0"
   }
 }
