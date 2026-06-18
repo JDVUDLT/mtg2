@@ -365,6 +365,72 @@
     color: var(--gold-bright);
   }
 
+  .boxes-section { margin-bottom: 1.4rem; }
+  .boxes-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.8rem;
+  }
+  .boxes-header h2 { font-size: 1.3rem; }
+
+  .boxes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.8rem;
+  }
+  .box-tile {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+  }
+  .box-tile .box-name { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--gold-bright); }
+  .box-tile .box-count { font-size: 0.78rem; color: var(--parchment-dim); margin-top: 0.2rem; }
+  .box-tile .box-desc { font-size: 0.78rem; color: var(--parchment-dim); margin-top: 0.4rem; font-style: italic; }
+  .boxes-empty { color: var(--parchment-dim); font-size: 0.85rem; padding: 0.6rem 0; }
+
+  .assign-info {
+    font-size: 0.85rem;
+    color: var(--parchment-dim);
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .assign-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  .assign-row select { flex: 1; }
+  .assign-row input { width: 70px; }
+  .assign-row .remove-row-btn {
+    background: transparent;
+    border: none;
+    color: var(--mana-r);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0 0.3rem;
+  }
+
+  .box-pill {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: rgba(201,162,74,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold-bright);
+    margin-right: 0.25rem;
+    margin-bottom: 0.2rem;
+  }
+  .box-pill.unassigned {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--panel-border);
+    color: var(--parchment-dim);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .card-tile { transition: none; }
     .card-tile:hover { transform: none; }
@@ -428,8 +494,20 @@
 
     <div class="summary-bar" id="collection-summary"></div>
 
+    <div class="boxes-section">
+      <div class="boxes-header">
+        <h2>Коробки</h2>
+        <button class="btn small" id="create-box-btn">+ Новая коробка</button>
+      </div>
+      <div class="boxes-grid" id="boxes-grid"></div>
+    </div>
+
     <div class="toolbar">
       <input type="text" id="collection-search" class="search-input" placeholder="Поиск в моей коллекции…">
+      <select id="collection-box-filter">
+        <option value="">Все коробки</option>
+        <option value="none">Без коробки</option>
+      </select>
       <button class="btn secondary small" id="collection-refresh">Обновить</button>
     </div>
 
@@ -437,6 +515,37 @@
   </section>
 
 </main>
+
+<!-- ============ Модалка: создать новую коробку ============ -->
+<div class="modal-overlay" id="create-box-modal">
+  <div class="modal">
+    <h3>Новая коробка</h3>
+    <label for="box-name">Название</label>
+    <input type="text" id="box-name" placeholder="Например: Командирская коробка #1">
+
+    <label for="box-description">Описание (необязательно)</label>
+    <input type="text" id="box-description" placeholder="Где стоит, что внутри…">
+
+    <div class="modal-actions">
+      <button class="btn" id="create-box-confirm">Создать</button>
+      <button class="btn secondary" id="create-box-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Модалка: распределить карту по коробкам ============ -->
+<div class="modal-overlay" id="assign-box-modal">
+  <div class="modal">
+    <h3 id="assign-modal-title">Разложить по коробкам</h3>
+    <div class="assign-info" id="assign-info"></div>
+    <div id="assign-rows"></div>
+    <button class="btn secondary small" id="assign-add-row" style="margin-top:0.6rem;">+ Добавить коробку</button>
+    <div class="modal-actions">
+      <button class="btn" id="assign-confirm">Сохранить</button>
+      <button class="btn secondary" id="assign-cancel">Закрыть</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============ Модалка добавления карты в коллекцию ============ -->
 <div class="modal-overlay" id="add-modal">
@@ -463,6 +572,11 @@
 
     <label for="add-price">Цена покупки (необязательно)</label>
     <input type="number" id="add-price" step="0.01" placeholder="0.00">
+
+    <label for="add-box">Коробка</label>
+    <select id="add-box">
+      <option value="">Без коробки</option>
+    </select>
 
     <label for="add-notes">Заметки</label>
     <input type="text" id="add-notes" placeholder="Например: с турнира, подпись и т.п.">
