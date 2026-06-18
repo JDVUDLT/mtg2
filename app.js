@@ -132,10 +132,10 @@ async function runCatalogSearch() {
   catalogStatus.textContent = "Ищу карты…";
 
   let query = db
-    .from("cards")
-    .select("id, name, set_code, rarity, mana_cost, type_line, colors, image_uris", { count: "exact" });
+    .from("cards_light")
+    .select("id, name, printed_name, set_code, rarity, mana_cost, type_line, colors, image_small, image_normal", { count: "exact" });
 
-  if (term) query = query.ilike("name", `%${term}%`);
+  if (term) query = query.or(`name.ilike.%${term}%,printed_name.ilike.%${term}%`);
   if (rarity) query = query.eq("rarity", rarity);
   if (activeColors.size > 0) query = query.contains("colors", Array.from(activeColors));
 
@@ -168,18 +168,19 @@ async function runCatalogSearch() {
 function renderCatalogGrid(cards) {
   catalogGrid.innerHTML = cards
     .map((card) => {
-      const img = card.image_uris?.normal || card.image_uris?.small;
+      const img = card.image_normal || card.image_small;
+      const displayName = card.printed_name || card.name;
       const imgHtml = img
-        ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(card.name)}" loading="lazy">`
-        : `<div class="no-image">${escapeHtml(card.name)}</div>`;
+        ? `<img src="${escapeHtml(img)}" alt="${escapeHtml(displayName)}" loading="lazy">`
+        : `<div class="no-image">${escapeHtml(displayName)}</div>`;
       return `
         <div class="card-tile">
           ${imgHtml}
           <div class="card-tile-body">
-            <div class="card-tile-name">${escapeHtml(card.name)}</div>
+            <div class="card-tile-name">${escapeHtml(displayName)}</div>
             <div class="card-tile-meta">${escapeHtml(card.set_code?.toUpperCase() || "")} · ${escapeHtml(card.rarity || "")}</div>
             <div class="card-tile-actions">
-              <button class="btn small add-to-collection-btn" data-id="${card.id}" data-name="${escapeHtml(card.name)}">+ В коллекцию</button>
+              <button class="btn small add-to-collection-btn" data-id="${card.id}" data-name="${escapeHtml(displayName)}">+ В коллекцию</button>
             </div>
           </div>
         </div>`;

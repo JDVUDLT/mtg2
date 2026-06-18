@@ -27,7 +27,7 @@ const EXCLUDED_LAYOUTS = new Set([
   "art_series",
 ]);
 
-const ONLY_ENGLISH = true;
+const ALLOWED_LANGUAGES = new Set(["en", "ru"]); // какие языки оставляем в каталоге
 
 // ---------- Supabase клиент ----------
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -60,7 +60,7 @@ function openCardStream(url) {
 }
 
 function shouldKeep(card) {
-  if (ONLY_ENGLISH && card.lang !== "en") return false;
+  if (!ALLOWED_LANGUAGES.has(card.lang)) return false;
   if (EXCLUDED_LAYOUTS.has(card.layout)) return false;
   if (card.set_type === "token" || card.set_type === "memorabilia") return false;
   return true;
@@ -91,6 +91,8 @@ function mapCard(card) {
     mana_cost: card.mana_cost ?? null,
     cmc: card.cmc ?? null,
     type_line: card.type_line ?? null,
+    printed_name: card.printed_name ?? null,
+    printed_type_line: card.printed_type_line ?? null,
     oracle_text: card.oracle_text ?? null,
     colors: card.colors ?? null,
     color_identity: card.color_identity ?? null,
